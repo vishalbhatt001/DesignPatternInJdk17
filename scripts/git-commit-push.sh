@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MSG="${1:-chore: update project files}"
+# Generate a unique default message each run (ISO UTC timestamp + random suffix)
+DEFAULT_MSG="chore: update project files $(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+MSG="${1:-$DEFAULT_MSG}"
 BRANCH="${2:-main}"
+
+# Echo the message being used for transparency
+echo "Commit message: $MSG"
 
 # Checkout the branch (create it if it doesn't exist)
 if git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
