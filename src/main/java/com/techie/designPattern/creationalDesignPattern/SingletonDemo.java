@@ -1,5 +1,7 @@
 package com.techie.designPattern.creationalDesignPattern;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /*
 
 Overview
@@ -77,19 +79,21 @@ enum ConfigurationManager {
 
     public record Config(String apiKey, String dbUrl, int timeout) {}
 
-    private Config config;
+    // Use AtomicReference to ensure atomic updates and visibility across threads
+    private final AtomicReference<Config> configRef;
 
     ConfigurationManager() {
         // Load configuration
-        this.config = new Config("api-key-123", "jdbc:postgresql://localhost", 30);
+        var initial = new Config("api-key-123", "jdbc:postgresql://localhost", 30);
+        this.configRef = new AtomicReference<>(initial);
     }
 
     public Config getConfig() {
-        return config;
+        return configRef.get();
     }
 
     public void updateConfig(Config newConfig) {
-        this.config = newConfig;
+        configRef.set(newConfig);
     }
 }
 
@@ -102,13 +106,20 @@ public class SingletonDemo {
         System.out.println("Acquired: " + pool.acquireConnection());
 
         var config = ConfigurationManager.INSTANCE.getConfig();
+        System.out.println("OLD Config: " + config);
+
         System.out.println("API Key (before): " + config.apiKey());
 
         // Update config to demonstrate updateConfig usage and silence IDE warnings
         var newConfig = new ConfigurationManager.Config("api-key-456", config.dbUrl(), config.timeout());
+        System.out.println("New Config: " + newConfig);
+
         ConfigurationManager.INSTANCE.updateConfig(newConfig);
 
         var updated = ConfigurationManager.INSTANCE.getConfig();
+
         System.out.println("API Key (after): " + updated.apiKey());
+        System.out.println("DB url" + updated.dbUrl());
+
     }
 }
